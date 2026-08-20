@@ -19,10 +19,15 @@ class HttpAuthDataSource implements AuthRemoteDataSource {
       body: jsonEncode({'email': email, 'password': password}),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode != 200) {
+      throw Exception('Login failed with status ${response.statusCode}');
+    }
+
+    try {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return LoginResponseModel.fromJson(json).toEntity();
+    } catch (_) {
+      throw Exception('Login failed: invalid response');
     }
-    throw Exception('Login failed');
   }
 }

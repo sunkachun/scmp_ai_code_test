@@ -6,6 +6,7 @@ import '../../../../core/router/app_routes.dart';
 import '../bloc/staff_bloc.dart';
 import '../bloc/staff_event.dart';
 import '../bloc/staff_state.dart';
+import '../widgets/staff_list_shimmer.dart';
 import '../widgets/user_avatar.dart';
 
 class StaffDirectoryPage extends StatefulWidget {
@@ -70,10 +71,40 @@ class _StaffDirectoryPageState extends State<StaffDirectoryPage> {
       body: BlocBuilder<StaffBloc, StaffState>(
         builder: (context, state) {
           if (state is StaffLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const StaffListShimmer();
           }
           if (state is StaffFailure) {
-            return Center(child: Text(state.errorMessage));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Something went wrong',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      state.errorMessage,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () =>
+                          context.read<StaffBloc>().add(const FetchStaffList()),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
           if (state is StaffLoaded) {
             _scheduleOverflowCheck();
@@ -83,8 +114,20 @@ class _StaffDirectoryPageState extends State<StaffDirectoryPage> {
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
-                    itemCount: state.users.length,
+                    itemCount: state.users.length + (state.isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
+                      if (index == state.users.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
                       final user = state.users[index];
                       return ListTile(
                         leading: UserAvatar(

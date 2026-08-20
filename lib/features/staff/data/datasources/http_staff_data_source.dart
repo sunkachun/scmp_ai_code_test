@@ -17,7 +17,11 @@ class HttpStaffDataSource implements StaffRemoteDataSource {
       '${AppConstants.baseUrl}${AppConstants.usersEndpoint}$page',
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load users with status ${response.statusCode}');
+    }
+
+    try {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final users = (json['data'] as List)
           .map((e) => UserModel.fromJson(e as Map<String, dynamic>).toEntity())
@@ -30,7 +34,8 @@ class HttpStaffDataSource implements StaffRemoteDataSource {
         totalPages: totalPages,
         hasMore: currentPage < totalPages,
       );
+    } catch (_) {
+      throw Exception('Failed to load users: invalid response');
     }
-    throw Exception('Failed to load users');
   }
 }

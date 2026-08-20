@@ -33,6 +33,11 @@ class UserAvatar extends StatelessWidget {
             width: 56,
             height: 56,
             fit: BoxFit.cover,
+            errorWidget: (context, url, error) => Icon(
+              Icons.person,
+              size: 32,
+              color: isSolid ? Colors.white : Colors.black,
+            ),
           ),
         ),
       ],
