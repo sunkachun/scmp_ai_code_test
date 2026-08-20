@@ -17,6 +17,8 @@ class StaffDirectoryPage extends StatefulWidget {
 }
 
 class _StaffDirectoryPageState extends State<StaffDirectoryPage> {
+  static const int _pageSize = 6;
+
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -49,13 +51,26 @@ class _StaffDirectoryPageState extends State<StaffDirectoryPage> {
       if (!mounted) return;
       final bloc = context.read<StaffBloc>();
       final state = bloc.state;
-      if (state is! StaffLoaded ||
-          !state.hasMore ||
-          state.isLoadingMore ||
-          !_scrollController.hasClients) {
+      if (state is! StaffLoaded || !state.hasMore || state.isLoadingMore) {
         return;
       }
-      if (_scrollController.position.maxScrollExtent <= 0) {
+
+      final double maxScrollExtent = _scrollController.hasClients
+          ? _scrollController.position.maxScrollExtent
+          : -1;
+
+      debugPrint(
+        'StaffDirectoryPage auto-load check: users=${state.users.length}, '
+        'hasMore=${state.hasMore}, isLoadingMore=${state.isLoadingMore}, '
+        'maxScrollExtent=$maxScrollExtent',
+      );
+
+      if (state.users.length <= _pageSize) {
+        bloc.add(const FetchNextPage());
+        return;
+      }
+
+      if (_scrollController.hasClients && maxScrollExtent < 20) {
         bloc.add(const FetchNextPage());
       }
     });
@@ -114,8 +129,7 @@ class _StaffDirectoryPageState extends State<StaffDirectoryPage> {
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
-                    itemCount: state.users.length +
-                        (state.isLoadingMore && state.hasMore ? 1 : 0),
+                    itemCount: state.users.length + (state.isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == state.users.length) {
                         return const Padding(
