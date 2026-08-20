@@ -114,7 +114,8 @@ class _StaffDirectoryPageState extends State<StaffDirectoryPage> {
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
-                    itemCount: state.users.length + (state.isLoadingMore ? 1 : 0),
+                    itemCount: state.users.length +
+                        (state.isLoadingMore && state.hasMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == state.users.length) {
                         return const Padding(
